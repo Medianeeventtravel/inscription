@@ -25,6 +25,8 @@
  .cta{display:inline-block;border:0;border-radius:24px;background:var(--orange);color:var(--blanc);font:700 14px 'Instrument Sans','Manrope',Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;padding:14px 28px;cursor:pointer}
  .cta[disabled]{opacity:.6;cursor:wait}
  .note{font-size:13px;opacity:.8;margin:14px 0 0}
+ .plus{margin:-8px 0 20px;font-size:15px}
+ .plus select{font:600 16px 'Manrope',Arial,sans-serif;color:var(--bleu);border:1.5px solid var(--gris);border-radius:12px;padding:6px 10px;background:var(--fond)}
  .ok h2{font-family:'Instrument Sans','Manrope',Arial,sans-serif;font-size:22px;margin:0 0 8px;color:var(--orange)}
  .agenda{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
  .agenda a{border:2px solid var(--orange);color:var(--orange);border-radius:22px;padding:9px 16px;font-weight:700;font-size:14px;text-decoration:none}
@@ -46,6 +48,7 @@
  <section class="carte" id="etape-choix">
   <p class="q" id="question">Combien serez-vous ?</p>
   <div class="nb" id="nb" role="group" aria-label="Nombre de personnes"></div>
+  <p class="plus" id="plus" hidden><label for="exact">Nombre exact de personnes :</label> <select id="exact"></select></p>
   <button class="cta" id="confirmer" type="button">Confirmer mon inscription</button>
   <p class="note" id="note">Vous recevrez un e-mail de confirmation avec l'invitation pour votre agenda.</p>
  </section>
@@ -80,7 +83,10 @@ const titre = p.get("t") || "Événement du Social Club"
 const debut = p.get("d") ? new Date(p.get("d")) : null
 const fin = p.get("fin") ? new Date(p.get("fin")) : debut && new Date(debut.getTime() + 2 * 3600e3)
 const lieu = p.get("l") || "Social Club · La Résidence Baragnon, 24 rue Croix Baragnon, 31000 Toulouse"
-let nombre = Math.min(5, Math.max(1, parseInt(p.get("n") || "1", 10) || 1))
+// m = nombre maximum de personnes par inscription (absent = illimité, plafonné à 30 sur la page)
+const max = parseInt(p.get("m") || "0", 10) || 0
+const plafond = max || 30
+let nombre = Math.min(plafond, Math.max(1, parseInt(p.get("n") || "1", 10) || 1))
 
 $("titre").textContent = titre
 if (p.get("f")) { $("illu").src = `assets/web-inedits-${p.get("f").toLowerCase()}-bleu.png`; $("illu").hidden = false }
@@ -102,13 +108,25 @@ if (action === "annuler") {
 	$("confirmer").textContent = "Confirmer l'annulation"
 	$("note").textContent = "Vous recevrez un e-mail confirmant l'annulation."
 } else {
-	for (const k of [1, 2, 3, 4, 5]) {
+	// Pastilles 1 à 4 (ou jusqu'au maximum), puis « 5 et + » avec choix du nombre exact.
+	const plus = plafond > 5
+	for (let i = 5; i <= plafond; i++) { const o = document.createElement("option"); o.value = o.textContent = i; $("exact").appendChild(o) }
+	const choisir = (k, bouton) => {
+		nombre = k
+		for (const x of $("nb").children) x.setAttribute("aria-pressed", String(x === bouton))
+		$("plus").hidden = !(plus && k >= 5)
+		if (plus && k >= 5) $("exact").value = String(Math.max(5, k))
+	}
+	for (const k of [1, 2, 3, 4, 5].filter((k) => k <= plafond)) {
 		const b = document.createElement("button")
-		b.type = "button"; b.textContent = k === 5 ? "5 et +" : k
-		b.setAttribute("aria-pressed", String(k === nombre))
-		b.onclick = () => { nombre = k; for (const x of $("nb").children) x.setAttribute("aria-pressed", String(x === b)) }
+		b.type = "button"; b.textContent = k === 5 && plus ? "5 et +" : k
+		b.onclick = () => choisir(k, b)
 		$("nb").appendChild(b)
 	}
+	$("exact").onchange = () => { nombre = parseInt($("exact").value, 10) }
+	const initial = [...$("nb").children][Math.min(nombre, 5) - 1]
+	choisir(nombre, initial)
+	if (max === 1) { $("question").textContent = "Confirmez-vous votre venue ?"; $("nb").hidden = true }
 }
 
 const utc = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")
@@ -135,7 +153,7 @@ $("confirmer").onclick = async () => {
 			$("ok-texte").textContent = "Votre inscription est annulée. Nous espérons vous retrouver lors d'un prochain rendez-vous du Social Club."
 			$("agenda").hidden = true
 		} else {
-			if (nombre === 5) $("ok-texte").textContent = "Votre inscription est enregistrée. Mélanie reviendra vers vous pour confirmer le nombre exact de personnes."
+			$("ok-texte").textContent = `Votre demande d'inscription pour ${nombre > 1 ? nombre + " personnes" : "1 personne"} est enregistrée. Un e-mail de confirmation vous arrive dans quelques minutes (ou de liste d'attente si la soirée est complète).`
 			preparerAgenda()
 		}
 	} catch (err) {
