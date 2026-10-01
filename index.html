@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Inscription · Social Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Instrument+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+ :root{--fond:#f5f4f0;--bleu:#21294f;--orange:#de5412;--gris:#c9c8c2;--blanc:#fff}
+ *{box-sizing:border-box}
+ body{margin:0;background:var(--fond);color:var(--bleu);font-family:'Brandon Text','Manrope',Arial,sans-serif;-webkit-font-smoothing:antialiased}
+ main{max-width:560px;margin:0 auto;padding:28px 18px 0}
+ .logo{display:block;width:min(360px,80%);margin:0 auto}
+ .illu{display:block;width:150px;margin:14px auto 0}
+ h1{overflow-wrap:anywhere;font-family:'Instrument Sans','Manrope',Arial,sans-serif;font-size:28px;line-height:1.15;letter-spacing:1px;text-transform:uppercase;text-align:center;margin:22px 0 8px}
+ .quand{text-align:center;color:var(--orange);font-size:17px;margin:0 0 4px}
+ .ou{text-align:center;font-size:14px;margin:0 0 26px;opacity:.85}
+ .carte{background:var(--blanc);border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 1px 0 var(--gris)}
+ .q{font-weight:700;font-size:16px;margin:0 0 14px}
+ .nb{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+ .nb button{min-width:52px;height:44px;border-radius:22px;border:1.5px solid var(--gris);background:var(--fond);color:var(--bleu);font:600 16px 'Manrope',Arial,sans-serif;cursor:pointer;padding:0 14px}
+ .nb button[aria-pressed=true]{background:var(--bleu);border-color:var(--bleu);color:var(--blanc)}
+ .cta{display:inline-block;border:0;border-radius:24px;background:var(--orange);color:var(--blanc);font:700 14px 'Instrument Sans','Manrope',Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;padding:14px 28px;cursor:pointer}
+ .cta[disabled]{opacity:.6;cursor:wait}
+ .note{font-size:13px;opacity:.8;margin:14px 0 0}
+ .ok h2{font-family:'Instrument Sans','Manrope',Arial,sans-serif;font-size:22px;margin:0 0 8px;color:var(--orange)}
+ .agenda{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+ .agenda a{border:2px solid var(--orange);color:var(--orange);border-radius:22px;padding:9px 16px;font-weight:700;font-size:14px;text-decoration:none}
+ footer{margin-top:34px;background:var(--orange);color:var(--blanc);border-radius:26px 26px 0 0;padding:24px 22px 26px;font-size:13px;line-height:1.55}
+ footer img{display:block;width:140px;margin-bottom:10px}
+ footer a{color:var(--blanc)}
+ .erreur{color:#b3261e}
+ [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+ <img class="logo" src="assets/web-logo-sc.png" alt="Social Club">
+ <img class="illu" id="illu" src="assets/web-inedits-drink-bleu.png" alt="" hidden>
+ <h1 id="titre">Inscription</h1>
+ <p class="quand" id="quand"></p>
+ <p class="ou" id="ou"></p>
+
+ <section class="carte" id="etape-choix">
+  <p class="q" id="question">Combien serez-vous ?</p>
+  <div class="nb" id="nb" role="group" aria-label="Nombre de personnes"></div>
+  <button class="cta" id="confirmer" type="button">Confirmer mon inscription</button>
+  <p class="note" id="note">Vous recevrez un e-mail de confirmation avec l'invitation pour votre agenda.</p>
+ </section>
+
+ <section class="carte ok" id="etape-ok" hidden>
+  <h2 id="ok-titre">Merci, c'est noté !</h2>
+  <p id="ok-texte">Votre inscription est enregistrée. Un e-mail de confirmation vous arrive dans quelques minutes.</p>
+  <div class="agenda" id="agenda">
+   <a id="g" target="_blank" rel="noopener">Google Agenda</a>
+   <a id="o" target="_blank" rel="noopener">Outlook</a>
+   <a id="ics" download="invitation.ics">Apple / autre (.ics)</a>
+  </div>
+ </section>
+
+ <section class="carte" id="etape-erreur" hidden><p class="erreur" id="erreur-texte"></p></section>
+</main>
+<footer>
+ <img src="assets/web-logo-sc-blanc.png" alt="Social Club">
+ RSVP : <a href="mailto:melanie@laresidencebaragnon.com">melanie@laresidencebaragnon.com</a><br>
+ Social Club · La Résidence Baragnon, 3e étage<br>24 rue Croix Baragnon, 31000 Toulouse
+</footer>
+
+<script>
+// Paramètres du lien (aucune donnée n'est stockée sur cette page) :
+// c = fiche contact Notion · e = événement Notion · n = nombre choisi · a = inscrire|annuler
+// t = titre · f = format Inédit · d / fin = début / fin (ISO) · l = lieu
+const WEBHOOK = "https://57387769767.webhook.notionusercontent.com/webhooks/worker/b1e96cae-5d8c-462a-9bc2-103d61738a46/01a0f7c0-108d-7b77-a7a0-3e9115d77219/qA6M8KVTGoMGGXA4/inscription"
+const p = new URLSearchParams(location.search)
+const $ = (id) => document.getElementById(id)
+const action = p.get("a") === "annuler" ? "annuler" : "inscrire"
+const titre = p.get("t") || "Événement du Social Club"
+const debut = p.get("d") ? new Date(p.get("d")) : null
+const fin = p.get("fin") ? new Date(p.get("fin")) : debut && new Date(debut.getTime() + 2 * 3600e3)
+const lieu = p.get("l") || "Social Club · La Résidence Baragnon, 24 rue Croix Baragnon, 31000 Toulouse"
+let nombre = Math.min(5, Math.max(1, parseInt(p.get("n") || "1", 10) || 1))
+
+$("titre").textContent = titre
+if (p.get("f")) { $("illu").src = `assets/web-inedits-${p.get("f").toLowerCase()}-bleu.png`; $("illu").hidden = false }
+if (debut) {
+	const j = debut.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" })
+	const h = debut.toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).replace(":", "h")
+	$("quand").textContent = `${j.charAt(0).toUpperCase() + j.slice(1)} · ${h}`
+}
+$("ou").textContent = lieu
+
+if (!p.get("c") || !p.get("e")) {
+	$("etape-choix").hidden = true; $("etape-erreur").hidden = false
+	$("erreur-texte").textContent = "Ce lien d'inscription est incomplet. Merci de répondre directement à l'e-mail d'invitation, ou d'écrire à melanie@laresidencebaragnon.com."
+}
+
+if (action === "annuler") {
+	$("question").textContent = "Vous ne pourrez finalement pas venir ?"
+	$("nb").hidden = true
+	$("confirmer").textContent = "Confirmer l'annulation"
+	$("note").textContent = "Vous recevrez un e-mail confirmant l'annulation."
+} else {
+	for (const k of [1, 2, 3, 4, 5]) {
+		const b = document.createElement("button")
+		b.type = "button"; b.textContent = k === 5 ? "5 et +" : k
+		b.setAttribute("aria-pressed", String(k === nombre))
+		b.onclick = () => { nombre = k; for (const x of $("nb").children) x.setAttribute("aria-pressed", String(x === b)) }
+		$("nb").appendChild(b)
+	}
+}
+
+const utc = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")
+function preparerAgenda() {
+	if (!debut) { $("agenda").hidden = true; return }
+	const t = `Social Club · ${titre}`
+	$("g").href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}&dates=${utc(debut)}/${utc(fin)}&location=${encodeURIComponent(lieu)}`
+	$("o").href = `https://outlook.office.com/calendar/action/compose?rru=addevent&subject=${encodeURIComponent(t)}&startdt=${encodeURIComponent(debut.toISOString())}&enddt=${encodeURIComponent(fin.toISOString())}&location=${encodeURIComponent(lieu)}`
+	const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Social Club//Inscription//FR", "METHOD:PUBLISH", "BEGIN:VEVENT",
+		`UID:${p.get("e")}@socialclub-baragnon`, `DTSTAMP:${utc(new Date())}`, `DTSTART:${utc(debut)}`, `DTEND:${utc(fin)}`,
+		`SUMMARY:${t.replace(/[,;]/g, "\\$&")}`, `LOCATION:${lieu.replace(/[,;]/g, "\\$&")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n")
+	$("ics").href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }))
+}
+
+$("confirmer").onclick = async () => {
+	$("confirmer").disabled = true
+	const corps = JSON.stringify({ a: action, c: p.get("c"), e: p.get("e"), n: nombre })
+	try {
+		// text/plain + no-cors : envoi simple, sans pré-vérification CORS. La confirmation fait foi par e-mail.
+		await fetch(WEBHOOK, { method: "POST", mode: "no-cors", headers: { "content-type": "text/plain" }, body: corps })
+		$("etape-choix").hidden = true; $("etape-ok").hidden = false
+		if (action === "annuler") {
+			$("ok-titre").textContent = "C'est noté."
+			$("ok-texte").textContent = "Votre inscription est annulée. Nous espérons vous retrouver lors d'un prochain rendez-vous du Social Club."
+			$("agenda").hidden = true
+		} else {
+			if (nombre === 5) $("ok-texte").textContent = "Votre inscription est enregistrée. Mélanie reviendra vers vous pour confirmer le nombre exact de personnes."
+			preparerAgenda()
+		}
+	} catch (err) {
+		$("confirmer").disabled = false
+		$("etape-erreur").hidden = false
+		$("erreur-texte").textContent = "L'envoi n'a pas abouti. Vérifiez votre connexion et réessayez, ou écrivez à melanie@laresidencebaragnon.com."
+	}
+}
+</script>
+</body>
+</html>
