@@ -17,6 +17,8 @@
  h1{overflow-wrap:anywhere;font-family:'Instrument Sans','Manrope',Arial,sans-serif;font-size:28px;line-height:1.15;letter-spacing:1px;text-transform:uppercase;text-align:center;margin:22px 0 8px}
  .quand{text-align:center;color:var(--orange);font-size:17px;margin:0 0 4px}
  .ou{text-align:center;font-size:14px;margin:0 0 26px;opacity:.85}
+ .nom{text-align:center;font-size:15px;margin:-12px 0 22px}
+ .nom strong{color:var(--orange)}
  .carte{background:var(--blanc);border-radius:22px;padding:26px 22px;text-align:center;box-shadow:0 1px 0 var(--gris)}
  .q{font-weight:700;font-size:16px;margin:0 0 14px}
  .nb{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
@@ -44,6 +46,7 @@
  <h1 id="titre">Inscription</h1>
  <p class="quand" id="quand"></p>
  <p class="ou" id="ou"></p>
+ <p class="nom" id="nom" hidden></p>
 
  <section class="carte" id="etape-choix">
   <p class="q" id="question">Combien serez-vous ?</p>
@@ -96,6 +99,15 @@ if (debut) {
 	$("quand").textContent = `${j.charAt(0).toUpperCase() + j.slice(1)} · ${h}`
 }
 $("ou").textContent = lieu
+// Nom du destinataire de l'invitation (balises Brevo non remplacées = ignorées).
+const propre = (v) => (v && !v.includes("{{") ? v.trim() : "")
+const nomComplet = [propre(p.get("p")), propre(p.get("nm"))].filter(Boolean).join(" ")
+if (nomComplet) {
+	$("nom").hidden = false
+	$("nom").innerHTML = ""
+	$("nom").append("Inscription au nom de ")
+	const f = document.createElement("strong"); f.textContent = nomComplet; $("nom").append(f)
+}
 
 if (!p.get("c") || !p.get("e")) {
 	$("etape-choix").hidden = true; $("etape-erreur").hidden = false
