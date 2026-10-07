@@ -70,7 +70,7 @@
 </main>
 <footer>
  <img src="assets/web-logo-sc-blanc.png" alt="Social Club">
- RSVP : <a href="mailto:melanie@laresidencebaragnon.com">melanie@laresidencebaragnon.com</a><br>
+ RSVP : <a href="mailto:melanie.r@laresidencebaragnon.com">melanie.r@laresidencebaragnon.com</a><br>
  Social Club · La Résidence Baragnon, 3e étage<br>24 rue Croix Baragnon, 31000 Toulouse
 </footer>
 
@@ -111,7 +111,7 @@ if (nomComplet) {
 
 if (!p.get("c") || !p.get("e")) {
 	$("etape-choix").hidden = true; $("etape-erreur").hidden = false
-	$("erreur-texte").textContent = "Ce lien d'inscription est incomplet. Merci de répondre directement à l'e-mail d'invitation, ou d'écrire à melanie@laresidencebaragnon.com."
+	$("erreur-texte").textContent = "Ce lien d'inscription est incomplet. Merci de répondre directement à l'e-mail d'invitation, ou d'écrire à melanie.r@laresidencebaragnon.com."
 }
 
 if (action === "annuler") {
@@ -171,7 +171,7 @@ $("confirmer").onclick = async () => {
 	} catch (err) {
 		$("confirmer").disabled = false
 		$("etape-erreur").hidden = false
-		$("erreur-texte").textContent = "L'envoi n'a pas abouti. Vérifiez votre connexion et réessayez, ou écrivez à melanie@laresidencebaragnon.com."
+		$("erreur-texte").textContent = "L'envoi n'a pas abouti. Vérifiez votre connexion et réessayez, ou écrivez à melanie.r@laresidencebaragnon.com."
 	}
 }
 </script>
